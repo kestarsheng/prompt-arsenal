@@ -27,7 +27,7 @@ body 用 - 列表说明具体改动，用中文描述
 **输入：** 在 UserService 里新增了 resetPassword 方法，加了单元测试
 
 **AI输出：**
-feat(auth): 添加密码重置功
+feat(auth): 添加密码重置功能
 - 在 UserService 中实现 resetPassword 方法
 - 增加邮箱和新密码的输入校验
 - 新增成功和失败场景的单元测试
