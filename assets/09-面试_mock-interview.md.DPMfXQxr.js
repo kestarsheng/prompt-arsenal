@@ -1,0 +1,1 @@
+import{_ as e,o as t,c as r}from"./chunks/framework.DpEPdvMq.js";const d=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"09-面试/mock-interview.md","filePath":"09-面试/mock-interview.md"}'),o={name:"09-面试/mock-interview.md"};function a(c,n,i,s,m,p){return t(),r("div")}const f=e(o,[["render",a]]);export{d as __pageData,f as default};
