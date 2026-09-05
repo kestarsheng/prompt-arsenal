@@ -1,0 +1,25 @@
+{
+  "name": "prompt-arsenal",
+  "version": "1.0.0",
+  "description": "> 一个持续更新的AI提示词集合，用于提升日常开发效率。",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kestarsheng/prompt-arsenal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kestarsheng/prompt-arsenal/issues"
+  },
+  "homepage": "https://github.com/kestarsheng/prompt-arsenal#readme",
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}
