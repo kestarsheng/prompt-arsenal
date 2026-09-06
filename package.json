@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/kestarsheng/prompt-arsenal#readme",
   "devDependencies": {
+    "typescript": "^7.0.2",
     "vitepress": "^1.6.4"
   }
 }
