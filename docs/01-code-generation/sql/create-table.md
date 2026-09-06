@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../../.vitepress/components/SourceCodeToggle.vue'
+import source from './create-table.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [sql, database, codegen]
 version: 1.0.0
@@ -10,18 +18,18 @@ last_updated: 2026-09-03
 需要根据实体类或需求描述生成标准建表语句时使用。
 
 ## 输入变量
-- `{{table_name}}`: 表名
-- `{{fields}}`: 字段列表及类型说明
-- `{{primary_key}}`: 主键字段名
-- `{{indexes}}`: 需要建索引的字段
+- `[table_name]`: 表名
+- `[fields]`: 字段列表及类型说明
+- `[primary_key]`: 主键字段名
+- `[indexes]`: 需要建索引的字段
 
 ## 提示词模板
 请根据以下需求生成 MySQL 建表语句：
 
-**表名：** {{table_name}}
-**字段：** {{fields}}
-**主键：** {{primary_key}}
-**索引：** {{indexes}}
+**表名：** [table_name]
+**字段：** [fields]
+**主键：** [primary_key]
+**索引：** [indexes]
 
 要求：
 1. 使用 InnoDB 引擎
@@ -42,3 +50,7 @@ last_updated: 2026-09-03
 
 **AI输出：**
 （预期生成完整的 orders 表建表语句）
+
+
+  </template>
+</SourceCodeToggle>

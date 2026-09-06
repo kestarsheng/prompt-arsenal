@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../.vitepress/components/SourceCodeToggle.vue'
+import source from './system-design.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [architecture, design, system]
 version: 1.0.0
@@ -10,16 +18,16 @@ last_updated: 2026-09-03
 需要设计一个新系统或新模块时，需要梳理设计思路。
 
 ## 输入变量
-- `{{project_name}}`: 项目名称
-- `{{requirements}}`: 核心需求列表
-- `{{constraints}}`: 约束条件（预算、时间、技术栈限制）
+- `[project_name]`: 项目名称
+- `[requirements]`: 核心需求列表
+- `[constraints]`: 约束条件（预算、时间、技术栈限制）
 
 ## 提示词模板
-请为 {{project_name}} 设计一个系统方案：
+请为 [project_name] 设计一个系统方案：
 
-**核心需求：** {{requirements}}
+**核心需求：** [requirements]
 
-**约束条件：** {{constraints}}
+**约束条件：** [constraints]
 
 **设计要求：**
 1. 给出整体架构图（文字描述或 Mermaid 格式）
@@ -45,3 +53,7 @@ last_updated: 2026-09-03
 
 **AI输出：**
 （输出完整的系统设计方案）
+
+
+  </template>
+</SourceCodeToggle>

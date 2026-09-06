@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../.vitepress/components/SourceCodeToggle.vue'
+import source from './work-log.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [documentation, productivity, summary, subtask]
 version: 2.0.0
@@ -41,3 +49,6 @@ last_updated: 2026-09-04
 ## 下一步建议
 - 将验证码存储从内存缓存迁移到Redis
 - 为重置密码接口添加IP维度的频率限制（如每小时最多3次）
+
+  </template>
+</SourceCodeToggle>

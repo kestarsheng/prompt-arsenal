@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../.vitepress/components/SourceCodeToggle.vue'
+import source from './split-large-class.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [refactoring, design-pattern]
 version: 1.0.0
@@ -33,3 +41,7 @@ last_updated: 2026-09-03
 
 **AI输出：**
 （输出分析报告 + 拆分方案 + 代码示例）
+
+
+  </template>
+</SourceCodeToggle>

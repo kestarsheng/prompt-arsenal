@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../.vitepress/components/SourceCodeToggle.vue'
+import source from './mock-interview.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [interview, career, mock, auto-search]
 version: 2.0.0
@@ -86,3 +94,7 @@ last_updated: 2026-09-04
 - 1.0.0 (2026-09-03): 初始版本（通用模拟面试）
 - 2.0.0 (2026-09-04): AI 自动联网搜索面经，无需用户手动粘贴
 
+
+
+  </template>
+</SourceCodeToggle>

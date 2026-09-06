@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../.vitepress/components/SourceCodeToggle.vue'
+import source from './api-doc.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [documentation, api, openapi]
 version: 1.0.0
@@ -10,18 +18,18 @@ last_updated: 2026-09-03
 写完 API 接口后，需要生成标准的接口文档供前端/测试使用。
 
 ## 输入变量
-- `{{api_name}}`: API 名称
-- `{{endpoints}}`: 接口列表及说明
-- `{{schemas}}`: 请求/响应数据结构
+- `[api_name]`: API 名称
+- `[endpoints]`: 接口列表及说明
+- `[schemas]`: 请求/响应数据结构
 
 ## 提示词模板
 请为以下 API 生成完整的接口文档：
 
-**API 名称：** {{api_name}}
+**API 名称：** [api_name]
 
-**接口列表：** {{endpoints}}
+**接口列表：** [endpoints]
 
-**数据结构：** {{schemas}}
+**数据结构：** [schemas]
 
 **文档要求：**
 1. 每个接口包含：路径、方法、请求参数、请求示例、响应示例
@@ -41,3 +49,7 @@ last_updated: 2026-09-03
 
 **AI输出：**
 （输出完整的 API 文档）
+
+
+  </template>
+</SourceCodeToggle>

@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../.vitepress/components/SourceCodeToggle.vue'
+import source from './explain-concept.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [learning, concept, explanation]
 version: 1.0.0
@@ -10,18 +18,18 @@ last_updated: 2026-09-03
 学习新技术或遇到不理解的概念时，想得到一个清晰易懂的解释。
 
 ## 输入变量
-- `{{concept}}`: 要解释的概念
-- `{{level}}`: 理解深度（入门/进阶/深入源码）
-- `{{analogy}}`: 是否需要生活类比
+- `[concept]`: 要解释的概念
+- `[level]`: 理解深度（入门/进阶/深入源码）
+- `[analogy]`: 是否需要生活类比
 
 ## 提示词模板
 请解释以下技术概念：
 
-**概念：** {{concept}}
+**概念：** [concept]
 
-**深度要求：** {{level}}
+**深度要求：** [level]
 
-**是否需要生活类比：** {{analogy}}
+**是否需要生活类比：** [analogy]
 
 **解释要求：**
 1. 用通俗易懂的语言
@@ -41,3 +49,7 @@ last_updated: 2026-09-03
 
 **AI输出：**
 （输出 CAP 定理的完整解释，含生活类比）
+
+
+  </template>
+</SourceCodeToggle>

@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../.vitepress/components/SourceCodeToggle.vue'
+import source from './commit-from-session.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [git, automation]
 version: 1.0.0
@@ -41,3 +49,7 @@ feat(auth): 添加密码重置功能
 
 ## 迭代记录
 - 1.0.0 (2026-09-04): 初始版本
+
+
+  </template>
+</SourceCodeToggle>

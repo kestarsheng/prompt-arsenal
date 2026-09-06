@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../.vitepress/components/SourceCodeToggle.vue'
+import source from './java-review.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [java, quality, code-review]
 version: 1.0.0
@@ -39,3 +47,6 @@ last_updated: 2026-09-03
 
 🔴 L23：使用 get() 前未检查 Optional.isPresent()，可能抛出 NoSuchElementException
     建议改为 orElseThrow(() -> new UserNotFoundException())
+
+  </template>
+</SourceCodeToggle>

@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../.vitepress/components/SourceCodeToggle.vue'
+import source from './exception-analyzer.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [debugging, exception, error]
 version: 1.0.0
@@ -29,3 +37,7 @@ last_updated: 2026-09-03
 
 **AI输出：**
 （输出异常分析报告）
+
+
+  </template>
+</SourceCodeToggle>

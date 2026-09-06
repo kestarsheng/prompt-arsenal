@@ -1,3 +1,11 @@
+<script setup>
+import SourceCodeToggle from '../.vitepress/components/SourceCodeToggle.vue'
+import source from './commit-message.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
 ---
 tags: [git, automation]
 version: 1.1.0
@@ -36,3 +44,7 @@ feat(auth): 添加密码重置功能
 ## 迭代记录
 - 1.0.0 (2026-09-03): 初始版本
 - 1.1.0 (2026-09-04): 改为中英双语标题格式，正文改用中文列表
+
+
+  </template>
+</SourceCodeToggle>
