@@ -20,7 +20,10 @@
   },
   "homepage": "https://github.com/kestarsheng/prompt-arsenal#readme",
   "devDependencies": {
+    "pagefind": "^1.5.2",
     "typescript": "^7.0.2",
-    "vitepress": "^1.6.4"
+    "vite-plugin-vitepress-auto-nav": "^4.0.0",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-pagefind": "^0.4.18"
   }
 }

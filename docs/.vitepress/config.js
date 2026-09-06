@@ -1,4 +1,7 @@
 import { defineConfig } from 'vitepress'
+import { pagefindPlugin } from 'vitepress-plugin-pagefind'
+// 从根目录的 vite.config.js 导入侧边栏数据
+import { sidebarData } from '../../vite.config.js'
 
 export default defineConfig({
   title: 'prompt-arsenal',
@@ -6,79 +9,31 @@ export default defineConfig({
   base: '/prompt-arsenal/',
   lang: 'zh-cn',
 
+  vite: {
+    plugins: [
+      pagefindPlugin({
+        btnPlaceholder: '搜索文档',
+        placeholder: '搜索提示词...',
+        emptyText: '没有找到相关内容',
+        heading: '共 {{searchResult}} 条结果',
+        forceLanguage: 'zh-cn'
+      })
+    ],
+    ssr: {
+      noExternal: ['vitepress-plugin-pagefind']
+    },
+    optimizeDeps: {
+      include: ['vitepress-plugin-pagefind']
+    }
+  },
+
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
       { text: 'GitHub', link: 'https://github.com/kestarsheng/prompt-arsenal' },
     ],
-    sidebar: [
-      {
-        text: '代码生成',
-        collapsed: false,
-        items: [
-          { text: 'Spring Controller (Java)', link: '/01-code-generation/java/spring-controller' },
-          { text: 'FastAPI CRUD (Python)', link: '/01-code-generation/python/fastapi-crud' },
-          { text: 'SQL 建表语句', link: '/01-code-generation/sql/create-table' }
-        ]
-      },
-      {
-        text: '代码审查',
-        collapsed: false,
-        items: [
-          { text: 'Java 代码审查', link: '/02-code-review/java-review' }
-        ]
-      },
-      {
-        text: '调试与重构',
-        collapsed: false,
-        items: [
-          { text: '异常堆栈分析', link: '/03-debugging/exception-analyzer' },
-          { text: '拆分大类', link: '/04-refactoring/split-large-class' }
-        ]
-      },
-      {
-        text: 'Git 辅助',
-        collapsed: false,
-        items: [
-          { text: '生成提交信息', link: '/05-git/commit-message' },
-          { text: '基于会话生成提交信息', link: '/05-git/commit-from-session' }
-        ]
-      },
-      {
-        text: '文档生成',
-        collapsed: false,
-        items: [
-          { text: 'API 文档生成', link: '/06-documentation/api-doc' },
-          { text: '工作总结日志', link: '/06-documentation/work-log' }
-        ]
-      },
-      {
-        text: '系统设计',
-        collapsed: false,
-        items: [
-          { text: '系统设计方案', link: '/07-architecture/system-design' }
-        ]
-      },
-      {
-        text: '学习与面试',
-        collapsed: false,
-        items: [
-          { text: '技术概念解释', link: '/08-learning/explain-concept' },
-          { text: '模拟面试（AI自动搜索面经）', link: '/09-面试/mock-interview' }
-        ]
-      },
-      {
-        text: '模板工具',
-        collapsed: false,
-        items: [
-          { text: '空白模板', link: '/templates/prompt-template' }
-        ]
-      }
-    ],
-    // 启用 VitePress 默认的本地搜索（虽然不是最优，但能用）
-    search: {
-      provider: 'local'
-    },
+    // 使用从 vite.config.js 导入的侧边栏数据
+    sidebar: sidebarData,
     socialLinks: [
       { icon: 'github', link: 'https://github.com/kestarsheng/prompt-arsenal' }
     ],
