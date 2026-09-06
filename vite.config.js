@@ -1,7 +1,9 @@
 // 项目根目录/vite.config.js
 import { defineConfig } from 'vite'
-import { readdirSync, statSync } from 'fs'
+import { readdirSync, statSync, readFileSync } from 'fs'
 import { resolve } from 'path'
+import vue from '@vitejs/plugin-vue'
+import raw from 'vite-plugin-raw'
 
 // 自动扫描 docs 目录生成侧边栏数据的函数
 function generateSidebar() {
@@ -12,12 +14,10 @@ function generateSidebar() {
     const result = []
     
     for (const item of items) {
-      // 跳过隐藏文件和特殊文件
       if (item.startsWith('.') || item === 'index.md') continue
       
       const fullPath = resolve(dir, item)
       const stat = statSync(fullPath)
-      // 构建相对路径，用于生成链接
       const linkPath = parentPath ? `${parentPath}/${item}` : item
       
       if (stat.isDirectory()) {
@@ -31,7 +31,6 @@ function generateSidebar() {
         }
       } else if (item.endsWith('.md')) {
         const name = item.replace(/\.md$/, '')
-        // 构建 VitePress 链接路径（去掉 docs 前缀）
         const link = '/' + linkPath.replace(/\.md$/, '')
         result.push({
           text: name,
@@ -45,11 +44,63 @@ function generateSidebar() {
   return scanDir(docsDir)
 }
 
-// 将侧边栏数据注入到 VitePress 配置中
+// 预生成源码映射
+function generateSourceMap() {
+  const docsDir = resolve(process.cwd(), 'docs')
+  const map = {}
+  
+  function scanDirForSource(dir, basePath = '') {
+    const items = readdirSync(dir)
+    
+    for (const item of items) {
+      if (item.startsWith('.')) continue
+      
+      const fullPath = resolve(dir, item)
+      const stat = statSync(fullPath)
+      const relPath = basePath ? `${basePath}/${item}` : item
+      
+      if (stat.isDirectory()) {
+        scanDirForSource(fullPath, relPath)
+      } else if (item.endsWith('.md')) {
+        const key = '/' + relPath
+        try {
+          const content = readFileSync(fullPath, 'utf-8')
+          map[key] = content
+        } catch (e) {
+          console.warn(`读取文件失败: ${fullPath}`)
+          map[key] = '读取文件失败'
+        }
+      }
+    }
+  }
+  
+  scanDirForSource(docsDir)
+  return map
+}
+
+const sourceMap = generateSourceMap()
+const sidebarData = generateSidebar()
+
 export default defineConfig({
-  // 这个配置会被 VitePress 自动合并
-  // 我们通过环境变量或自定义属性传递侧边栏数据
+  plugins: [
+    vue({ include: [/\.vue$/] }),
+    raw({ fileRegex: /\.md$/ })
+  ],
+  // 关键：这里的 define 配置需要保留
+  define: {
+    '__SOURCE_MAP__': sourceMap
+  },
+  optimizeDeps: {
+    include: ['vue']
+  },
+  server: {
+    fs: {
+      allow: [
+        resolve(__dirname, 'node_modules')
+      ]
+    }
+  }
 })
 
-// 导出侧边栏数据供 config.js 使用
-export const sidebarData = generateSidebar()
+// 导出侧边栏数据供 VitePress config.js 使用
+export { sidebarData }

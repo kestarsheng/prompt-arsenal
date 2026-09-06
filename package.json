@@ -6,7 +6,8 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+	"add-toggle": "node scripts/add-source-toggle.js"
   },
   "repository": {
     "type": "git",
@@ -20,8 +21,10 @@
   },
   "homepage": "https://github.com/kestarsheng/prompt-arsenal#readme",
   "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
     "pagefind": "^1.5.2",
     "typescript": "^7.0.2",
+    "vite-plugin-raw": "^1.0.3",
     "vite-plugin-vitepress-auto-nav": "^4.0.0",
     "vitepress": "^1.6.4",
     "vitepress-plugin-pagefind": "^0.4.18"

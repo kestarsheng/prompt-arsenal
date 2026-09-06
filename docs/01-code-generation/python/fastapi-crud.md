@@ -1,3 +1,14 @@
+<script setup>
+import SourceCodeToggle from '../../.vitepress/components/SourceCodeToggle.vue'
+
+// 直接导入原始 .md 源码
+import source from './fastapi-crud.md?raw'
+</script>
+
+<SourceCodeToggle :source="source">
+  <template #rendered>
+
+<!-- 这里放原来所有的 Markdown 渲染内容 -->
 ---
 tags: [python, fastapi, codegen]
 version: 1.0.0
@@ -10,9 +21,11 @@ last_updated: 2026-09-03
 需要快速生成一个 FastAPI 的 CRUD 接口时使用。
 
 ## 输入变量
+<template v-pre>
 - `{{model_name}}`: 模型名称（如 User, Product）
 - `{{model_name_lower}}`: 模型名小写（如 user, product）
 - `{{schema_name}}`: Pydantic Schema 名称（如 UserSchema）
+</template>
 
 ## 提示词模板
 请为 {{model_name}} 生成一个 FastAPI CRUD 接口，要求：
@@ -28,8 +41,6 @@ last_updated: 2026-09-03
 4. 使用 async/await 异步处理
 5. 包含基本的异常处理（HTTPException）
 
-请生成完整的 Python 代码，包含所有 import 语句。
-
 ## 使用示例
 **输入变量：**
 - model_name: Product
@@ -37,3 +48,6 @@ last_updated: 2026-09-03
 
 **AI输出：**
 （预期生成一个完整的 product_router.py 文件）
+
+  </template>
+</SourceCodeToggle>
