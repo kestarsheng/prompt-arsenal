@@ -40,11 +40,18 @@ function replaceMustache(content) {
 
 function cleanContent(content) {
   let cleaned = content
+  // 移除 script setup 块
   cleaned = cleaned.replace(/<script setup>[\s\S]*?<\/script>\n?/g, '')
+  // 移除 SourceCodeToggle 组件包裹
   cleaned = cleaned.replace(/<SourceCodeToggle[\s\S]*?<\/SourceCodeToggle>/g, '')
-  cleaned = cleaned.replace(/<\/template>/g, '')
-  cleaned = cleaned.replace(/<template[^>]*>/g, '')
+  // 移除残留的 template 标签
+  cleaned = cleaned.replace(/<\/?template[^>]*>/g, '')
+  // 移除多余空行
   cleaned = cleaned.replace(/\n{3,}/g, '\n\n')
+  // 如果内容为空，返回原内容（防止丢失）
+  if (!cleaned.trim()) {
+    return content
+  }
   return cleaned.trim()
 }
 
@@ -53,13 +60,35 @@ function processFile(file) {
   
   let content = readFileSync(file.fullPath, 'utf-8')
   
+  // 如果已处理且非强制模式，跳过
   if (!forceMode && content.includes('import { ref }')) {
     console.log(`  跳过（已处理）`)
     return
   }
 
-  content = cleanContent(content)
-  content = replaceMustache(content)
+  // 提取原始内容
+  let originalContent = content
+  
+  // 如果文件已被包裹，提取 v-else 块中的内容
+  if (content.includes('import { ref }')) {
+    const match = content.match(/<div v-else>\n?([\s\S]*?)\n?<\/div>\n?<style>/)
+    if (match) {
+      originalContent = match[1].trim()
+    } else {
+      // 如果匹配失败，用 cleanContent 清理
+      originalContent = cleanContent(content)
+    }
+  } else {
+    originalContent = cleanContent(content)
+  }
+  
+  // 如果提取后内容为空，用原内容
+  if (!originalContent.trim()) {
+    originalContent = '内容加载失败，请检查文件'
+  }
+
+  // 替换 {{}} 为 []
+  originalContent = replaceMustache(originalContent)
 
   const newContent = `<script setup>
 import { ref } from 'vue'
@@ -80,7 +109,7 @@ const showSource = ref(false)
 
 <div v-else>
 
-${content}
+${originalContent}
 
 </div>
 
@@ -93,7 +122,7 @@ html.dark .source-code-container {
 `
 
   writeFileSync(file.fullPath, newContent, 'utf-8')
-  console.log(`  ✅ 已处理`)
+  console.log(`  ✅ 已处理 (内容长度: ${originalContent.length})`)
 }
 
 function main() {
