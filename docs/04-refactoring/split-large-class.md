@@ -5,12 +5,14 @@ import source from './split-large-class.md?raw'
 const showSource = ref(false)
 </script>
 
-<button @click="showSource = !showSource" class="source-toggle-btn">
-  {{ showSource ? '📖 返回阅读' : '📄 源码' }}
-</button>
+<div style="position: sticky; top: 80px; float: right; z-index: 100; margin-bottom: 12px; margin-left: 12px;">
+  <button @click="showSource = !showSource" style="padding: 6px 14px; background: var(--vp-c-brand); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.2s ease;">
+    {{ showSource ? '📖 返回阅读' : '📄 源码' }}
+  </button>
+</div>
 
-<div v-if="showSource" class="source-code-container">
-  <pre><code>{{ source }}</code></pre>
+<div v-if="showSource" style="background: #1e1e1e; color: #d4d4d4; padding: 24px; border-radius: 8px; max-height: 80vh; overflow: auto; margin: 20px 0; border: 1px solid #333; clear: both; font-family: 'Fira Code', monospace; font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-wrap: break-word;">
+  <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;"><code style="font-family: inherit; font-size: 14px; color: #d4d4d4;">{{ source }}</code></pre>
 </div>
 
 <div v-else>
@@ -54,57 +56,8 @@ last_updated: 2026-09-03
 </div>
 
 <style>
-.source-toggle-btn {
-  position: sticky;
-  top: 80px;
-  float: right;
-  z-index: 100;
-  padding: 6px 14px;
-  background: var(--vp-c-brand);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  transition: all 0.2s ease;
-  margin-bottom: 12px;
-  margin-left: 12px;
-}
-.source-toggle-btn:hover {
-  opacity: 0.85;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-.source-code-container {
-  background: #1e1e1e;
-  color: #d4d4d4;
-  padding: 24px;
-  border-radius: 8px;
-  max-height: 80vh;
-  overflow: auto;
-  margin: 20px 0;
-  border: 1px solid #333;
-  clear: both;
-  font-family: 'Fira Code', monospace;
-  font-size: 14px;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-.source-code-container pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-.source-code-container code {
-  font-family: inherit;
-  font-size: 14px;
-  color: #d4d4d4;
-}
 html.dark .source-code-container {
-  background: #0d0d0d;
-  border-color: #2d2d2d;
+  background: #0d0d0d !important;
+  border-color: #2d2d2d !important;
 }
 </style>
