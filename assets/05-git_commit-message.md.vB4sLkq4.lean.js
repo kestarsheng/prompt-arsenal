@@ -1,1 +1,0 @@
-import{_ as e,o as t,c as a}from"./chunks/framework.DpEPdvMq.js";const d=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"05-git/commit-message.md","filePath":"05-git/commit-message.md"}'),s={name:"05-git/commit-message.md"};function o(m,c,r,i,n,p){return t(),a("div")}const f=e(s,[["render",o]]);export{d as __pageData,f as default};

@@ -1,1 +1,0 @@
-import{_ as t,o as e,c as a}from"./chunks/framework.DpEPdvMq.js";const _=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"06-documentation/api-doc.md","filePath":"06-documentation/api-doc.md"}'),o={name:"06-documentation/api-doc.md"};function c(n,r,i,d,s,p){return e(),a("div")}const f=t(o,[["render",c]]);export{_ as __pageData,f as default};
