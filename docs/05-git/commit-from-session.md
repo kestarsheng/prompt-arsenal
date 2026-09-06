@@ -1,5 +1,5 @@
 ---
-tags: [git, automation, ai]
+tags: [git, automation]
 version: 1.0.0
 last_updated: 2026-09-04
 ---
@@ -23,10 +23,10 @@ last_updated: 2026-09-04
 4. 根据改动的模块自动推断 scope
 
 **输出格式：**
-<type>(<scope>): <中文主题>
-<中文改动点1>
-<中文改动点2>
-<中文改动点3>
+    `[type]`(`[scope]`): `[中文主题]`
+    - `[中文改动点1]`
+    - `[中文改动点2]`
+    - `[中文改动点3]`
 
 **如果你不确定 type 或 scope，也请给出建议并说明理由。**
 

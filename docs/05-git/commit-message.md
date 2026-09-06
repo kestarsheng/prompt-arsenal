@@ -13,10 +13,11 @@ last_updated: 2026-09-04
 请根据以下代码改动生成 Git 提交信息，遵循 Conventional Commits 规范：
 [在这里粘贴 git diff 或简要描述改动]
 
-输出格式必须是：
-<type>(<scope>): <中文描述>
-<中文具体改动点1>
-<中文具体改动点2>
+**输出格式：**
+    `[type]`(`[scope]`): `[中文主题]`
+    - `[中文改动点1]`
+    - `[中文改动点2]`
+    - `[中文改动点3]`
 
 type 可选：feat（新功能）, fix（修复）, docs（文档）, style（格式）, refactor（重构）, perf（性能）, test（测试）, chore（杂务）
 scope 是改动的模块名（如 auth, payment, api）
