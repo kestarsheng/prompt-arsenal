@@ -21,11 +21,8 @@
   },
   "homepage": "https://github.com/kestarsheng/prompt-arsenal#readme",
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.8",
     "pagefind": "^1.5.2",
     "typescript": "^7.0.2",
-    "vite-plugin-raw": "^1.0.3",
-    "vite-plugin-vitepress-auto-nav": "^4.0.0",
     "vitepress": "^1.6.4",
     "vitepress-plugin-pagefind": "^0.4.18"
   }

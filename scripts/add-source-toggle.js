@@ -6,6 +6,12 @@ import { fileURLToPath } from 'url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const docsDir = resolve(__dirname, '../docs')
 
+// 已处理文件的标记：文件已被本脚本重写过
+const PROCESSED_MARK = 'import { ref }'
+
+// 从已处理文件中取回 <div v-else> 内的原始 Markdown
+const EXTRACT_RE = /<div v-else>\n*([\s\S]*)<\/div>\s*<style>/
+
 const forceMode = process.argv.includes('--force')
 const excludeFiles = ['index.md', 'README.md']
 
@@ -21,70 +27,33 @@ function getAllMdFiles(dir, basePath = '') {
       files.push(...getAllMdFiles(fullPath, relPath))
     } else if (item.endsWith('.md')) {
       if (excludeFiles.includes(item)) continue
-      files.push({ fullPath, relPath, fileName: item, relativeDir: dirname(relPath) })
+      files.push({ fullPath, relPath, fileName: item })
     }
   }
   return files
-}
-
-function getComponentImportPath(file) {
-  const fileDir = file.relativeDir
-  const depth = fileDir === '.' ? 0 : fileDir.split('/').length
-  const prefix = depth === 0 ? '.' : '../'.repeat(depth)
-  return `${prefix}.vitepress/components/SourceCodeToggle.vue`
 }
 
 function replaceMustache(content) {
   return content.replace(/\{\{([^}]+)\}\}/g, '[$1]')
 }
 
-function cleanContent(content) {
-  let cleaned = content
-  // 移除 script setup 块
-  cleaned = cleaned.replace(/<script setup>[\s\S]*?<\/script>\n?/g, '')
-  // 移除 SourceCodeToggle 组件包裹
-  cleaned = cleaned.replace(/<SourceCodeToggle[\s\S]*?<\/SourceCodeToggle>/g, '')
-  // 移除残留的 template 标签
-  cleaned = cleaned.replace(/<\/?template[^>]*>/g, '')
-  // 移除多余空行
-  cleaned = cleaned.replace(/\n{3,}/g, '\n\n')
-  // 如果内容为空，返回原内容（防止丢失）
-  if (!cleaned.trim()) {
-    return content
-  }
-  return cleaned.trim()
-}
-
-function processFile(file) {
+function processFile(file, content) {
   console.log(`处理: ${file.relPath}`)
-  
-  let content = readFileSync(file.fullPath, 'utf-8')
-  
-  // 如果已处理且非强制模式，跳过
-  if (!forceMode && content.includes('import { ref }')) {
-    console.log(`  跳过（已处理）`)
-    return
-  }
 
-  // 提取原始内容
-  let originalContent = content
-  
-  // 如果文件已被包裹，提取 v-else 块中的内容
-  if (content.includes('import { ref }')) {
-    const match = content.match(/<div v-else>\n?([\s\S]*?)\n?<\/div>\n?<style>/)
-    if (match) {
-      originalContent = match[1].trim()
-    } else {
-      // 如果匹配失败，用 cleanContent 清理
-      originalContent = cleanContent(content)
+  let originalContent
+
+  if (content.includes(PROCESSED_MARK)) {
+    // 已处理：从 v-else 块中取回原始 Markdown
+    const match = content.match(EXTRACT_RE)
+    if (!match || !match[1].trim()) {
+      // 提取失败说明文件格式不符合预期，写入会损坏正文，故跳过
+      console.warn('  ⚠️ 跳过：无法提取正文（格式异常），文件未修改')
+      return false
     }
+    originalContent = match[1].trim()
   } else {
-    originalContent = cleanContent(content)
-  }
-  
-  // 如果提取后内容为空，用原内容
-  if (!originalContent.trim()) {
-    originalContent = '内容加载失败，请检查文件'
+    // 未处理：正文即文件内容
+    originalContent = content.trim()
   }
 
   // 替换 {{}} 为 []
@@ -123,6 +92,7 @@ html.dark .source-code-container {
 
   writeFileSync(file.fullPath, newContent, 'utf-8')
   console.log(`  ✅ 已处理 (内容长度: ${originalContent.length})`)
+  return true
 }
 
 function main() {
@@ -133,10 +103,8 @@ function main() {
   let processedCount = 0
   for (const file of files) {
     const content = readFileSync(file.fullPath, 'utf-8')
-    if (forceMode || !content.includes('import { ref }')) {
-      processFile(file)
-      processedCount++
-    }
+    if (content.includes(PROCESSED_MARK) && !forceMode) continue
+    if (processFile(file, content)) processedCount++
   }
 
   console.log(`\n✅ 完成！共处理 ${processedCount} 个文件`)

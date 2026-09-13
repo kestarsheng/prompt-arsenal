@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 import { pagefindPlugin } from 'vitepress-plugin-pagefind'
-// 从根目录的 vite.config.js 导入侧边栏数据
-import { sidebarData } from '../../vite.config.js'
+// 侧边栏数据由 sidebar.js 扫描 docs 目录自动生成
+import { sidebarData } from './sidebar.js'
 
 export default defineConfig({
   title: 'prompt-arsenal',
@@ -32,7 +32,6 @@ export default defineConfig({
       { text: '首页', link: '/' },
       { text: 'GitHub', link: 'https://github.com/kestarsheng/prompt-arsenal' },
     ],
-    // 使用从 vite.config.js 导入的侧边栏数据
     sidebar: sidebarData,
     socialLinks: [
       { icon: 'github', link: 'https://github.com/kestarsheng/prompt-arsenal' }
