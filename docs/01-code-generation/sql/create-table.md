@@ -1,3 +1,9 @@
+---
+tags: [sql, database, codegen]
+version: 1.0.0
+last_updated: 2026-09-03
+---
+
 <script setup>
 import { ref } from 'vue'
 import source from './create-table.md?raw'
@@ -17,11 +23,12 @@ const showSource = ref(false)
 
 <div v-else>
 
----
-tags: [sql, database, codegen]
-version: 1.0.0
-last_updated: 2026-09-03
----
+<!--prompt-meta-->
+<div style="clear:both;margin:0 0 24px;padding:14px 18px;border:1px solid var(--vp-c-divider);border-left:4px solid var(--vp-c-brand-1);border-radius:8px;background:var(--vp-c-bg-soft);font-size:13px;line-height:1.8;color:var(--vp-c-text-2);">
+  <div style="display:flex;flex-wrap:wrap;gap:2px 20px;"><span>版本 <strong style="color:var(--vp-c-text-1);">v1.0.0</strong></span><span>更新于 2026-09-03</span></div>
+  <div style="margin-top:8px;"><span style="display:inline-block;margin:0 6px 4px 0;padding:2px 10px;border-radius:999px;background:var(--vp-c-brand-soft);color:var(--vp-c-brand-1);font-size:12px;font-weight:500;">sql</span><span style="display:inline-block;margin:0 6px 4px 0;padding:2px 10px;border-radius:999px;background:var(--vp-c-brand-soft);color:var(--vp-c-brand-1);font-size:12px;font-weight:500;">database</span><span style="display:inline-block;margin:0 6px 4px 0;padding:2px 10px;border-radius:999px;background:var(--vp-c-brand-soft);color:var(--vp-c-brand-1);font-size:12px;font-weight:500;">codegen</span></div>
+</div>
+<!--/prompt-meta-->
 
 # 生成 SQL 建表语句
 

@@ -9,8 +9,14 @@ const docsDir = resolve(__dirname, '../docs')
 // 已处理文件的标记：文件已被本脚本重写过
 const PROCESSED_MARK = 'import { ref }'
 
-// 从已处理文件中取回 <div v-else> 内的原始 Markdown
+// 从已处理文件中取回 <div v-else> 内的正文
 const EXTRACT_RE = /<div v-else>\n*([\s\S]*)<\/div>\s*<style>/
+
+// 元信息卡片整体（含标记注释），重新处理时先剥离再重建
+const META_CARD_RE = /<!--prompt-meta-->[\s\S]*?<!--\/prompt-meta-->\n*/
+
+// 文件或正文开头的 YAML frontmatter
+const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n*/
 
 const forceMode = process.argv.includes('--force')
 const excludeFiles = ['index.md', 'README.md']
@@ -33,6 +39,96 @@ function getAllMdFiles(dir, basePath = '') {
   return files
 }
 
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function unquote(text) {
+  return text.trim().replace(/^['"]|['"]$/g, '')
+}
+
+// 解析模板用到的 YAML 子集：key: value 与 key: [a, b]
+function parseSimpleYaml(yaml) {
+  const data = {}
+  for (const line of yaml.split(/\r?\n/)) {
+    const match = line.match(/^([A-Za-z0-9_-]+)\s*:\s*(.*)$/)
+    if (!match) continue
+    const [, key, rawValue] = match
+    const value = rawValue.trim()
+    if (value.startsWith('[') && value.endsWith(']')) {
+      data[key] = value
+        .slice(1, -1)
+        .split(',')
+        .map(unquote)
+        .filter(Boolean)
+    } else {
+      data[key] = unquote(value)
+    }
+  }
+  return data
+}
+
+function splitFrontmatter(content) {
+  const match = content.match(FRONTMATTER_RE)
+  if (!match) return { yaml: null, body: content }
+  return { yaml: match[1].trim(), body: content.slice(match[0].length) }
+}
+
+// 还原出原始 Markdown 的 frontmatter 与正文
+function extractSource(content) {
+  const processed = content.includes(PROCESSED_MARK)
+
+  let body
+  if (processed) {
+    const match = content.match(EXTRACT_RE)
+    if (!match || !match[1].trim()) return null
+    body = match[1].replace(META_CARD_RE, '').trim()
+  } else {
+    body = content.trim()
+  }
+  if (!body) return null
+
+  // frontmatter 可能位于文件顶部（本脚本生成后的格式），
+  // 也可能仍留在正文开头（首次处理的旧格式），两种都要能取回
+  const outer = processed ? splitFrontmatter(content) : { yaml: null }
+  if (outer.yaml) return { yaml: outer.yaml, body }
+
+  const inner = splitFrontmatter(body)
+  return { yaml: inner.yaml, body: inner.body.trim() }
+}
+
+// 渲染元信息卡片；无任何元信息时返回空串
+function renderMetaCard(data) {
+  const tags = Array.isArray(data.tags) ? data.tags : []
+  const meta = []
+  if (data.version) {
+    meta.push(
+      `<span>版本 <strong style="color:var(--vp-c-text-1);">v${escapeHtml(data.version)}</strong></span>`
+    )
+  }
+  if (data.last_updated) {
+    meta.push(`<span>更新于 ${escapeHtml(data.last_updated)}</span>`)
+  }
+
+  if (meta.length === 0 && tags.length === 0) return ''
+
+  const chips = tags
+    .map(
+      (tag) =>
+        `<span style="display:inline-block;margin:0 6px 4px 0;padding:2px 10px;border-radius:999px;background:var(--vp-c-brand-soft);color:var(--vp-c-brand-1);font-size:12px;font-weight:500;">${escapeHtml(tag)}</span>`
+    )
+    .join('')
+
+  return `<!--prompt-meta-->
+<div style="clear:both;margin:0 0 24px;padding:14px 18px;border:1px solid var(--vp-c-divider);border-left:4px solid var(--vp-c-brand-1);border-radius:8px;background:var(--vp-c-bg-soft);font-size:13px;line-height:1.8;color:var(--vp-c-text-2);">
+${meta.length > 0 ? `  <div style="display:flex;flex-wrap:wrap;gap:2px 20px;">${meta.join('')}</div>\n` : ''}${chips ? `  <div style="margin-top:8px;">${chips}</div>\n` : ''}</div>
+<!--/prompt-meta-->`
+}
+
 function replaceMustache(content) {
   return content.replace(/\{\{([^}]+)\}\}/g, '[$1]')
 }
@@ -40,26 +136,21 @@ function replaceMustache(content) {
 function processFile(file, content) {
   console.log(`处理: ${file.relPath}`)
 
-  let originalContent
-
-  if (content.includes(PROCESSED_MARK)) {
-    // 已处理：从 v-else 块中取回原始 Markdown
-    const match = content.match(EXTRACT_RE)
-    if (!match || !match[1].trim()) {
-      // 提取失败说明文件格式不符合预期，写入会损坏正文，故跳过
-      console.warn('  ⚠️ 跳过：无法提取正文（格式异常），文件未修改')
-      return false
-    }
-    originalContent = match[1].trim()
-  } else {
-    // 未处理：正文即文件内容
-    originalContent = content.trim()
+  const source = extractSource(content)
+  if (!source) {
+    // 提取失败说明文件格式不符合预期，写入会损坏正文，故跳过
+    console.warn('  ⚠️ 跳过：无法提取正文（格式异常），文件未修改')
+    return false
   }
 
-  // 替换 {{}} 为 []
-  originalContent = replaceMustache(originalContent)
+  const yaml = source.yaml ? replaceMustache(source.yaml) : null
+  const body = replaceMustache(source.body)
+  const metaCard = renderMetaCard(yaml ? parseSimpleYaml(yaml) : {})
+  const renderedBody = metaCard ? `${metaCard}\n\n${body}` : body
+  // frontmatter 必须位于文件首位，放在 <script setup> 之后会被当作正文渲染
+  const frontmatterBlock = yaml ? `---\n${yaml}\n---\n\n` : ''
 
-  const newContent = `<script setup>
+  const newContent = `${frontmatterBlock}<script setup>
 import { ref } from 'vue'
 import source from './${file.fileName}?raw'
 
@@ -78,7 +169,7 @@ const showSource = ref(false)
 
 <div v-else>
 
-${originalContent}
+${renderedBody}
 
 </div>
 
@@ -91,7 +182,7 @@ html.dark .source-code-container {
 `
 
   writeFileSync(file.fullPath, newContent, 'utf-8')
-  console.log(`  ✅ 已处理 (内容长度: ${originalContent.length})`)
+  console.log(`  ✅ 已处理 (正文长度: ${renderedBody.length})`)
   return true
 }
 
