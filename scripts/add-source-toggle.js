@@ -20,6 +20,9 @@ const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n*/
 
 const forceMode = process.argv.includes('--force')
 const excludeFiles = ['index.md', 'README.md']
+// templates/ 是给贡献者复制的脚手架，frontmatter 与正文都是占位示例，
+// 按真实提示词页处理会把占位值渲染成元信息卡片
+const excludeDirs = ['templates']
 
 function getAllMdFiles(dir, basePath = '') {
   const items = readdirSync(dir)
@@ -30,6 +33,7 @@ function getAllMdFiles(dir, basePath = '') {
     const stat = statSync(fullPath)
     const relPath = basePath ? `${basePath}/${item}` : item
     if (stat.isDirectory()) {
+      if (excludeDirs.includes(item)) continue
       files.push(...getAllMdFiles(fullPath, relPath))
     } else if (item.endsWith('.md')) {
       if (excludeFiles.includes(item)) continue
