@@ -1,0 +1,74 @@
+import{o as r,c as t,j as a,t as n,k as i,a8 as s,p}from"./chunks/framework.BcVvFr-R.js";const d=`---
+tags: [git, automation]
+version: 1.1.0
+last_updated: 2026-09-04
+---
+
+<script setup>
+import { ref } from 'vue'
+import source from './commit-message.md?raw'
+
+const showSource = ref(false)
+<\/script>
+
+<div style="position: sticky; top: 80px; float: right; z-index: 100; margin-bottom: 12px; margin-left: 12px;">
+  <button @click="showSource = !showSource" style="padding: 6px 14px; background: var(--vp-c-brand); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.2s ease;">
+    {{ showSource ? '📖 返回阅读' : '📄 源码' }}
+  </button>
+</div>
+
+<div v-if="showSource" style="background: #1e1e1e; color: #d4d4d4; padding: 24px; border-radius: 8px; max-height: 80vh; overflow: auto; margin: 20px 0; border: 1px solid #333; clear: both; font-family: 'Fira Code', monospace; font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-wrap: break-word;">
+  <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;"><code style="font-family: inherit; font-size: 14px; color: #d4d4d4;">{{ source }}</code></pre>
+</div>
+
+<div v-else>
+
+<!--prompt-meta-->
+<div style="clear:both;margin:0 0 24px;padding:14px 18px;border:1px solid var(--vp-c-divider);border-left:4px solid var(--vp-c-brand-1);border-radius:8px;background:var(--vp-c-bg-soft);font-size:13px;line-height:1.8;color:var(--vp-c-text-2);">
+  <div style="display:flex;flex-wrap:wrap;gap:2px 20px;"><span>版本 <strong style="color:var(--vp-c-text-1);">v1.1.0</strong></span><span>更新于 2026-09-04</span></div>
+  <div style="margin-top:8px;"><span style="display:inline-block;margin:0 6px 4px 0;padding:2px 10px;border-radius:999px;background:var(--vp-c-brand-soft);color:var(--vp-c-brand-1);font-size:12px;font-weight:500;">git</span><span style="display:inline-block;margin:0 6px 4px 0;padding:2px 10px;border-radius:999px;background:var(--vp-c-brand-soft);color:var(--vp-c-brand-1);font-size:12px;font-weight:500;">automation</span></div>
+</div>
+<!--/prompt-meta-->
+
+# 生成规范的Git提交信息（中英混合版）
+
+## 适用场景
+写完代码后，需要写符合 Conventional Commits 规范的提交信息，但描述部分用中文更清晰。
+
+## 提示词模板
+请根据以下代码改动生成 Git 提交信息，遵循 Conventional Commits 规范：
+[在这里粘贴 git diff 或简要描述改动]
+
+**输出格式：**
+    \`[type]\`(\`[scope]\`): \`[中文主题]\`
+    - \`[中文改动点1]\`
+    - \`[中文改动点2]\`
+    - \`[中文改动点3]\`
+
+type 可选：feat（新功能）, fix（修复）, docs（文档）, style（格式）, refactor（重构）, perf（性能）, test（测试）, chore（杂务）
+scope 是改动的模块名（如 auth, payment, api）
+subject 用中文描述，不超过50字
+body 用 - 列表说明具体改动，用中文描述
+
+## 使用示例
+**输入：** 在 UserService 里新增了 resetPassword 方法，加了单元测试
+
+**AI输出：**
+feat(auth): 添加密码重置功能
+- 在 UserService 中实现 resetPassword 方法
+- 增加邮箱和新密码的输入校验
+- 新增成功和失败场景的单元测试
+
+## 迭代记录
+- 1.0.0 (2026-09-03): 初始版本
+- 1.1.0 (2026-09-04): 改为中英双语标题格式，正文改用中文列表
+
+</div>
+
+<style>
+html.dark .source-code-container {
+  background: #0d0d0d !important;
+  border-color: #2d2d2d !important;
+}
+</style>
+`,l={style:{position:"sticky",top:"80px",float:"right","z-index":"100","margin-bottom":"12px","margin-left":"12px"}},c={key:0,style:{background:"#1e1e1e",color:"#d4d4d4",padding:"24px","border-radius":"8px","max-height":"80vh",overflow:"auto",margin:"20px 0",border:"1px solid #333",clear:"both","font-family":"'Fira Code', monospace","font-size":"14px","line-height":"1.7","white-space":"pre-wrap","word-wrap":"break-word"}},x={style:{margin:"0","white-space":"pre-wrap","word-wrap":"break-word"}},g={style:{"font-family":"inherit","font-size":"14px",color:"#d4d4d4"}},v={key:1},y=JSON.parse('{"title":"生成规范的Git提交信息（中英混合版）","description":"","frontmatter":{"tags":["git","automation"],"version":"1.1.0","last_updated":"2026-09-04T00:00:00.000Z"},"headers":[],"relativePath":"05-git/commit-message.md","filePath":"05-git/commit-message.md"}'),b={name:"05-git/commit-message.md"},w=Object.assign(b,{setup(f){const e=p(!1);return(h,o)=>(r(),t("div",{"data-pagefind-body":!0,"data-pagefind-meta":"date:1789378157000"},[a("div",l,[a("button",{onClick:o[0]||(o[0]=m=>e.value=!e.value),style:{padding:"6px 14px",background:"var(--vp-c-brand)",color:"white",border:"none","border-radius":"4px",cursor:"pointer","font-size":"13px","font-weight":"500","box-shadow":"0 2px 8px rgba(0,0,0,0.15)",transition:"all 0.2s ease"}},n(e.value?"📖 返回阅读":"📄 源码"),1)]),e.value?(r(),t("div",c,[a("pre",x,[a("code",g,n(i(d)),1)])])):(r(),t("div",v,[...o[1]||(o[1]=[s("",14)])]))]))}});export{y as __pageData,w as default};
