@@ -5,6 +5,11 @@ node_modules/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 
+# 站点页面：由 prompts/ 下的干净源文件生成（npm run gen-pages），不提交
+# 源文件的唯一真相在 prompts/；docs/ 下这些目录只是构建产物
+docs/0[1-9]-*/
+docs/templates/
+
 # 系统文件
 .DS_Store
 Thumbs.db

@@ -1,28 +1,24 @@
-// scripts/add-source-toggle.js
-import { readdirSync, readFileSync, writeFileSync, statSync } from 'fs'
-import { resolve, dirname } from 'path'
+// scripts/generate-pages.js
+// 从 prompts/ 的干净源文件生成 docs/ 下的站点页面。
+//
+// 设计要点：源文件永不被改写。本脚本只读 prompts/、只写 docs/，
+// 因此不存在「从已改写文件中反推原始正文」的往返逻辑，
+// 也就不存在往返导致正文被截断/损坏的可能。
+import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync, rmSync } from 'fs'
+import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const docsDir = resolve(__dirname, '../docs')
+const rootDir = resolve(__dirname, '..')
+const promptsDir = join(rootDir, 'prompts')
+const docsDir = join(rootDir, 'docs')
 
-// 已处理文件的标记：文件已被本脚本重写过
-const PROCESSED_MARK = 'import { ref }'
+// 模板是给贡献者复制的脚手架：其 frontmatter 与正文都是占位示例，
+// 注入元信息卡片会把占位值渲染成真实数据，故原样复制、不注入。
+const isTemplate = (rel) => rel.startsWith('templates/')
 
-// 从已处理文件中取回 <div v-else> 内的正文
-const EXTRACT_RE = /<div v-else>\n*([\s\S]*)<\/div>\s*<style>/
-
-// 元信息卡片整体（含标记注释），重新处理时先剥离再重建
-const META_CARD_RE = /<!--prompt-meta-->[\s\S]*?<!--\/prompt-meta-->\n*/
-
-// 文件或正文开头的 YAML frontmatter
-const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n*/
-
-const forceMode = process.argv.includes('--force')
-const excludeFiles = ['index.md', 'README.md']
-// templates/ 是给贡献者复制的脚手架，frontmatter 与正文都是占位示例，
-// 按真实提示词页处理会把占位值渲染成元信息卡片
-const excludeDirs = ['templates']
+// 页面开头的 YAML frontmatter
+const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/
 
 function getAllMdFiles(dir, basePath = '') {
   const items = readdirSync(dir)
@@ -33,10 +29,8 @@ function getAllMdFiles(dir, basePath = '') {
     const stat = statSync(fullPath)
     const relPath = basePath ? `${basePath}/${item}` : item
     if (stat.isDirectory()) {
-      if (excludeDirs.includes(item)) continue
       files.push(...getAllMdFiles(fullPath, relPath))
     } else if (item.endsWith('.md')) {
-      if (excludeFiles.includes(item)) continue
       files.push({ fullPath, relPath, fileName: item })
     }
   }
@@ -82,29 +76,6 @@ function splitFrontmatter(content) {
   return { yaml: match[1].trim(), body: content.slice(match[0].length) }
 }
 
-// 还原出原始 Markdown 的 frontmatter 与正文
-function extractSource(content) {
-  const processed = content.includes(PROCESSED_MARK)
-
-  let body
-  if (processed) {
-    const match = content.match(EXTRACT_RE)
-    if (!match || !match[1].trim()) return null
-    body = match[1].replace(META_CARD_RE, '').trim()
-  } else {
-    body = content.trim()
-  }
-  if (!body) return null
-
-  // frontmatter 可能位于文件顶部（本脚本生成后的格式），
-  // 也可能仍留在正文开头（首次处理的旧格式），两种都要能取回
-  const outer = processed ? splitFrontmatter(content) : { yaml: null }
-  if (outer.yaml) return { yaml: outer.yaml, body }
-
-  const inner = splitFrontmatter(body)
-  return { yaml: inner.yaml, body: inner.body.trim() }
-}
-
 // 渲染元信息卡片；无任何元信息时返回空串
 function renderMetaCard(data) {
   const tags = Array.isArray(data.tags) ? data.tags : []
@@ -133,30 +104,39 @@ ${meta.length > 0 ? `  <div style="display:flex;flex-wrap:wrap;gap:2px 20px;">${
 <!--/prompt-meta-->`
 }
 
-function replaceMustache(content) {
-  return content.replace(/\{\{([^}]+)\}\}/g, '[$1]')
+// docs/<rel> 相对 prompts/<rel> 的导入路径
+// 例：docs/05-git/x.md        -> ../../prompts/05-git/x.md
+//     docs/01-code/java/x.md  -> ../../../prompts/01-code/java/x.md
+function sourceImportPath(relPath) {
+  const dirDepth = dirname(relPath).split('/').filter(Boolean).length
+  return `${'../'.repeat(dirDepth + 1)}prompts/${relPath}`
 }
 
 function processFile(file, content) {
-  console.log(`处理: ${file.relPath}`)
+  const rel = file.relPath
+  console.log(`生成: ${rel}`)
 
-  const source = extractSource(content)
-  if (!source) {
-    // 提取失败说明文件格式不符合预期，写入会损坏正文，故跳过
-    console.warn('  ⚠️ 跳过：无法提取正文（格式异常），文件未修改')
-    return false
+  // 模板页原样搬运，不注入
+  if (isTemplate(rel)) {
+    const dest = join(docsDir, rel)
+    mkdirSync(dirname(dest), { recursive: true })
+    writeFileSync(dest, content, 'utf-8')
+    console.log('  ✅ 已复制（模板页不注入）')
+    return true
   }
 
-  const yaml = source.yaml ? replaceMustache(source.yaml) : null
-  const body = replaceMustache(source.body)
+  const source = splitFrontmatter(content)
+  const yaml = source.yaml
+  const body = source.body.trim()
   const metaCard = renderMetaCard(yaml ? parseSimpleYaml(yaml) : {})
   const renderedBody = metaCard ? `${metaCard}\n\n${body}` : body
   // frontmatter 必须位于文件首位，放在 <script setup> 之后会被当作正文渲染
   const frontmatterBlock = yaml ? `---\n${yaml}\n---\n\n` : ''
+  const importPath = sourceImportPath(rel)
 
   const newContent = `${frontmatterBlock}<script setup>
 import { ref } from 'vue'
-import source from './${file.fileName}?raw'
+import source from '${importPath}?raw'
 
 const showSource = ref(false)
 </script>
@@ -185,24 +165,33 @@ html.dark .source-code-container {
 </style>
 `
 
-  writeFileSync(file.fullPath, newContent, 'utf-8')
-  console.log(`  ✅ 已处理 (正文长度: ${renderedBody.length})`)
+  const dest = join(docsDir, rel)
+  mkdirSync(dirname(dest), { recursive: true })
+  writeFileSync(dest, newContent, 'utf-8')
+  console.log(`  ✅ 已生成 (正文长度: ${renderedBody.length})`)
   return true
 }
 
 function main() {
-  console.log('📂 扫描 docs 目录...')
-  const files = getAllMdFiles(docsDir)
-  console.log(`📄 找到 ${files.length} 个 .md 文件${forceMode ? ' (强制模式)' : ''}`)
+  console.log('📂 扫描 prompts 目录...')
+  const files = getAllMdFiles(promptsDir)
+  console.log(`📄 找到 ${files.length} 个源文件`)
+
+  // 生成物完全由 prompts/ 派生：先清掉本次要重建的顶层目录，避免残留过期页面
+  const topDirs = readdirSync(promptsDir).filter((item) =>
+    statSync(resolve(promptsDir, item)).isDirectory()
+  )
+  for (const dir of topDirs) {
+    rmSync(resolve(docsDir, dir), { recursive: true, force: true })
+  }
 
   let processedCount = 0
   for (const file of files) {
     const content = readFileSync(file.fullPath, 'utf-8')
-    if (content.includes(PROCESSED_MARK) && !forceMode) continue
     if (processFile(file, content)) processedCount++
   }
 
-  console.log(`\n✅ 完成！共处理 ${processedCount} 个文件`)
+  console.log(`\n✅ 完成！共生成 ${processedCount} 个页面`)
 }
 
 main()

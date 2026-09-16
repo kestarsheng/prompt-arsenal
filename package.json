@@ -4,9 +4,9 @@
   "description": "> 一个持续更新的AI提示词集合，用于提升日常开发效率。",
   "type": "module",
   "scripts": {
-    "add-toggle": "node scripts/add-source-toggle.js",
-    "docs:dev": "npm run add-toggle && vitepress dev docs",
-    "docs:build": "npm run add-toggle && vitepress build docs",
+    "gen-pages": "node scripts/generate-pages.js",
+    "docs:dev": "npm run gen-pages && vitepress dev docs",
+    "docs:build": "npm run gen-pages && vitepress build docs",
     "docs:preview": "vitepress preview docs"
   },
   "repository": {
