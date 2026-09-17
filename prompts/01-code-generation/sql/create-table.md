@@ -1,44 +1,60 @@
 ---
 tags: [sql, database, codegen]
-version: 1.0.0
-last_updated: 2026-09-03
+version: 2.0.0
+last_updated: 2026-09-17
 ---
 
 # 生成 SQL 建表语句
 
 ## 适用场景
-需要根据实体类或需求描述生成标准建表语句时使用。
+根据字段需求生成可直接执行的 MySQL 建表语句，避免类型选择和索引设计的常见错误。
 
 ## 输入变量
-- `[table_name]`: 表名
-- `[fields]`: 字段列表及类型说明
-- `[primary_key]`: 主键字段名
-- `[indexes]`: 需要建索引的字段
+| 变量 | 含义 | 示例 |
+| :--- | :--- | :--- |
+| `[table_name]` | 表名（蛇形命名） | orders |
+| `[fields]` | 字段及业务含义说明 | user_id 用户ID、total_price 金额、status 状态 |
+| `[indexes]` | 需要建索引的字段 | user_id, status |
 
 ## 提示词模板
-请根据以下需求生成 MySQL 建表语句：
 
-**表名：** [table_name]
-**字段：** [fields]
-**主键：** [primary_key]
-**索引：** [indexes]
+把下面整段复制给 AI，替换 [占位符] 后使用。
 
-要求：
-1. 使用 InnoDB 引擎
-2. 字符集使用 utf8mb4
-3. 包含 created_at 和 updated_at 时间戳字段
-4. 主键使用 BIGINT AUTO_INCREMENT
-5. 为每个字段添加合适的注释
-6. 为外键字段和查询频繁字段添加索引
+你是一名有 10 年以上经验的 MySQL DBA 型后端工程师，长期负责高并发业务的表结构设计。只做与任务直接相关的事；不确定的字段类型先说明假设。
 
-请生成完整的 CREATE TABLE 语句。
+【任务】
+为 [table_name] 生成一条可直接执行的 CREATE TABLE 语句。
+
+【表结构需求】
+字段：[fields]
+主键：id
+索引：[indexes]
+
+【约束】
+必须：
+- InnoDB 引擎，utf8mb4 字符集，显式声明 COLLATE utf8mb4_0900_ai_ci 或注明版本兼容的排序规则
+- 主键用 BIGINT UNSIGNED AUTO_INCREMENT
+- 每个字段 NOT NULL 并给默认值，确实允许为空的字段才用 NULL 并注明原因
+- 表和每个字段都写 COMMENT；状态类字段在注释里枚举取值含义
+- 金额用 DECIMAL，禁止 FLOAT/DOUBLE
+- 时间字段统一 created_at DATETIME DEFAULT CURRENT_TIMESTAMP、updated_at 加 ON UPDATE CURRENT_TIMESTAMP
+- 索引命名 ix_表名_字段名
+- 语句末尾带表注释，可直接在 MySQL 8.0 执行
+
+禁止：
+- 使用外键约束（一致性由应用层保证；如需要外键先说明再给出）
+- 使用 TEXT/BLOB 存结构化数据
+- 对枚举取值用 ENUM 类型，统一用 TINYINT 加注释
 
 ## 使用示例
 **输入：**
-- 表名: orders
-- 字段: id, user_id, product_id, quantity, total_price, status, created_at, updated_at
-- 主键: id
-- 索引: user_id, status
+table_name: orders
+fields: user_id 用户ID、product_id 商品ID、quantity 数量、total_price 订单金额、status 订单状态(1待支付 2已支付 3已取消)
+indexes: user_id, status
 
-**AI输出：**
-（预期生成完整的 orders 表建表语句）
+**AI 输出：**
+完整的 orders 建表语句：BIGINT 主键、DECIMAL 金额、TINYINT 状态带枚举注释、ix_orders_user_id 与 ix_orders_status 索引、created_at/updated_at 齐全。
+
+## 迭代记录
+- 1.0.0 (2026-09-03): 初始版本
+- 2.0.0 (2026-09-17): 按新模板重构，补充 NOT NULL 策略、DECIMAL/TINYINT 类型规则、去外键约束等取舍说明
