@@ -8,7 +8,8 @@
     "docs:dev": "npm run gen-pages && vitepress dev docs",
     "docs:build": "npm run gen-pages && vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "test": "node --test"
+    "test": "node --test",
+    "lint:prompts": "node scripts/lint-prompts.js"
   },
   "repository": {
     "type": "git",
