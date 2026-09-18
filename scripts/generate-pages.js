@@ -7,7 +7,7 @@
 //
 // 结构说明：所有构建逻辑都是导出的纯函数（可被 test/ 下的测试直接调用），
 // 文件末尾通过 import.meta.url 判断是否被直接执行，只有 CLI 方式才会写盘。
-import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync, rmSync } from 'fs'
+import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync, rmSync, existsSync } from 'fs'
 import { resolve, dirname, join } from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 
@@ -111,7 +111,10 @@ ${meta.length > 0 ? `  <div style="display:flex;flex-wrap:wrap;gap:2px 20px;">${
 // 例：docs/05-git/x.md        -> ../../prompts/05-git/x.md
 //     docs/01-code/java/x.md  -> ../../../prompts/01-code/java/x.md
 export function sourceImportPath(relPath) {
-  const dirDepth = dirname(relPath).split('/').filter(Boolean).length
+  // 过滤掉 dirname 对根级文件返回的 '.'，否则根级文件会多算一层
+  const dirDepth = dirname(relPath)
+    .split('/')
+    .filter((seg) => seg && seg !== '.').length
   return `${'../'.repeat(dirDepth + 1)}prompts/${relPath}`
 }
 
@@ -173,6 +176,19 @@ export function generate({ promptsDir = DEFAULT_PROMPTS_DIR, docsDir = DEFAULT_D
   )
   for (const dir of topDirs) {
     rmSync(resolve(docsDir, dir), { recursive: true, force: true })
+  }
+
+  // 清理孤儿目录：prompts/ 里已删除的分类，其 docs/ 页面目录也一并删除。
+  // 点目录（如 .vitepress）与非目录文件（如手写的 index.md）不受影响。
+  const promptTopSet = new Set(topDirs)
+  if (existsSync(docsDir)) {
+    for (const entry of readdirSync(docsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue
+      if (entry.name.startsWith('.')) continue
+      if (!promptTopSet.has(entry.name)) {
+        rmSync(resolve(docsDir, entry.name), { recursive: true, force: true })
+      }
+    }
   }
 
   let processedCount = 0
