@@ -7,6 +7,13 @@ on:
 permissions:
   contents: write
 
+# 部署只能有一个在途运行：新推送取消旧运行，保证 gh-pages 永远由最新提交部署。
+# 没有这个限制时，连发多个提交会出现多个运行同时抢推 gh-pages：
+# 谁后完成谁覆盖，可能把新内容冲回旧版，甚至 push 冲突直接失败。
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
