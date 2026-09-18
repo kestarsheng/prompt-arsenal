@@ -109,7 +109,8 @@ describe('buildPageContent', () => {
     assert.equal(page.startsWith('---\ntags: [git, automation]\nversion: 1.1.0\nlast_updated: 2026-09-04\n---\n\n'), true)
     assert.match(page, /import source from '\.\.\/\.\.\/prompts\/05-git\/commit-message\.md\?raw'/)
     const metaIdx = page.indexOf('<!--prompt-meta-->')
-    const bodyIdx = page.indexOf('# 标题')
+    // 正文出现在 script setup 的 promptBody 注入里，取脚本块之后的第一次出现
+    const bodyIdx = page.indexOf('# 标题', page.indexOf('</script>'))
     assert.equal(metaIdx > -1 && metaIdx < bodyIdx, true)
     assert.match(page, /版本 <strong[^>]*>v1\.1\.0<\/strong>/)
   })
@@ -118,6 +119,28 @@ describe('buildPageContent', () => {
     const page = buildPageContent('x.md', '# 纯正文\n')
     assert.equal(page.startsWith('---'), false)
     assert.equal(page.includes('prompt-meta'), false)
+  })
+
+  test('复制按钮：注入剥好 frontmatter 的正文与剪贴板逻辑', () => {
+    const page = buildPageContent('05-git/commit-message.md', SAMPLE_PROMPT)
+    const line = page.split('\n').find((l) => l.startsWith('const promptBody = '))
+    assert.match(page, /复制提示词/)
+    assert.match(page, /已复制/)
+    assert.match(page, /navigator\.clipboard\.writeText/)
+    // 正文注入不含 frontmatter（SAMPLE_PROMPT 的正文从 # 标题开始）
+    assert.match(page, /const promptBody = "# 标题/)
+    assert.equal(line.includes('last_updated'), false)
+  })
+
+  test('正文含 </script> 时，脚本块内的注入被转义', () => {
+    const evil = '# 标题\n\n```html\n<script>alert(1)</script>\n```\n'
+    const page = buildPageContent('x.md', evil)
+    // promptBody 注入行不得含裸 </，否则会提前闭合 <script setup> 块；
+    // markdown 正文里的原文由渲染层转义，属既有行为
+    const line = page.split('\n').find((l) => l.startsWith('const promptBody = '))
+    assert.notEqual(line, undefined)
+    assert.equal(line.includes('</'), false)
+    assert.match(line, /<\\\/script>/)
   })
 })
 

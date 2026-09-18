@@ -131,17 +131,44 @@ export function buildPageContent(rel, content) {
   // frontmatter 必须位于文件首位，放在 <script setup> 之后会被当作正文渲染
   const frontmatterBlock = yaml ? `---\n${yaml}\n---\n\n` : ''
   const importPath = sourceImportPath(rel)
+  // 构建期注入正文（不含 frontmatter）：复制按钮一键拷贝的就是它。
+  // JSON.stringify 保证任意内容都成为合法 JS 字符串；`</` 转义为 `<\\/`
+  // 防止正文里出现 </script> 时提前闭合脚本块（与 Vite 对 raw 导入的处理一致）。
+  const promptBodyJson = JSON.stringify(body).replace(/<\//g, '<\\/')
 
   return `${frontmatterBlock}<script setup>
 import { ref } from 'vue'
 import source from '${importPath}?raw'
 
 const showSource = ref(false)
+const copied = ref(false)
+// 构建期注入的正文，一键复制给 AI 时直接可用
+const promptBody = ${promptBodyJson}
+let copyTimer = null
+async function copyPrompt() {
+  try {
+    await navigator.clipboard.writeText(promptBody)
+  } catch {
+    // 剪贴板 API 不可用时的兑底
+    const ta = document.createElement('textarea')
+    ta.value = promptBody
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    document.body.removeChild(ta)
+  }
+  copied.value = true
+  clearTimeout(copyTimer)
+  copyTimer = setTimeout(() => { copied.value = false }, 1500)
+}
 </script>
 
-<div style="position: sticky; top: 80px; float: right; z-index: 100; margin-bottom: 12px; margin-left: 12px;">
+<div style="position: sticky; top: 80px; float: right; z-index: 100; margin-bottom: 12px; margin-left: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
   <button @click="showSource = !showSource" style="padding: 6px 14px; background: var(--vp-c-brand); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.2s ease;">
     {{ showSource ? '📖 返回阅读' : '📄 源码' }}
+  </button>
+  <button @click="copyPrompt" style="padding: 6px 14px; background: var(--vp-c-brand); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.2s ease;">
+    {{ copied ? '已复制' : '复制提示词' }}
   </button>
 </div>
 
