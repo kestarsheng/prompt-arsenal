@@ -29,6 +29,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # 部署前门禁：提示词不符合规范或有测试失败时，禁止上线
+      - name: Lint prompts
+        run: npm run lint:prompts
+
+      - name: Run tests
+        run: npm test
+
       - name: Build VitePress site
         run: npm run docs:build
 
