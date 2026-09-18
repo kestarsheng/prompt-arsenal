@@ -4,23 +4,26 @@
 // 设计要点：源文件永不被改写。本脚本只读 prompts/、只写 docs/，
 // 因此不存在「从已改写文件中反推原始正文」的往返逻辑，
 // 也就不存在往返导致正文被截断/损坏的可能。
+//
+// 结构说明：所有构建逻辑都是导出的纯函数（可被 test/ 下的测试直接调用），
+// 文件末尾通过 import.meta.url 判断是否被直接执行，只有 CLI 方式才会写盘。
 import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync, rmSync } from 'fs'
 import { resolve, dirname, join } from 'path'
-import { fileURLToPath } from 'url'
+import { fileURLToPath, pathToFileURL } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = resolve(__dirname, '..')
-const promptsDir = join(rootDir, 'prompts')
-const docsDir = join(rootDir, 'docs')
+const DEFAULT_PROMPTS_DIR = join(rootDir, 'prompts')
+const DEFAULT_DOCS_DIR = join(rootDir, 'docs')
 
 // 模板是给贡献者复制的脚手架：其 frontmatter 与正文都是占位示例，
 // 注入元信息卡片会把占位值渲染成真实数据，故原样复制、不注入。
-const isTemplate = (rel) => rel.startsWith('templates/')
+export const isTemplate = (rel) => rel.startsWith('templates/')
 
 // 页面开头的 YAML frontmatter
-const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/
+export const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/
 
-function getAllMdFiles(dir, basePath = '') {
+export function getAllMdFiles(dir, basePath = '') {
   const items = readdirSync(dir)
   const files = []
   for (const item of items) {
@@ -37,7 +40,7 @@ function getAllMdFiles(dir, basePath = '') {
   return files
 }
 
-function escapeHtml(text) {
+export function escapeHtml(text) {
   return String(text)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -50,7 +53,7 @@ function unquote(text) {
 }
 
 // 解析模板用到的 YAML 子集：key: value 与 key: [a, b]
-function parseSimpleYaml(yaml) {
+export function parseSimpleYaml(yaml) {
   const data = {}
   for (const line of yaml.split(/\r?\n/)) {
     const match = line.match(/^([A-Za-z0-9_-]+)\s*:\s*(.*)$/)
@@ -70,14 +73,14 @@ function parseSimpleYaml(yaml) {
   return data
 }
 
-function splitFrontmatter(content) {
+export function splitFrontmatter(content) {
   const match = content.match(FRONTMATTER_RE)
   if (!match) return { yaml: null, body: content }
   return { yaml: match[1].trim(), body: content.slice(match[0].length) }
 }
 
 // 渲染元信息卡片；无任何元信息时返回空串
-function renderMetaCard(data) {
+export function renderMetaCard(data) {
   const tags = Array.isArray(data.tags) ? data.tags : []
   const meta = []
   if (data.version) {
@@ -107,23 +110,15 @@ ${meta.length > 0 ? `  <div style="display:flex;flex-wrap:wrap;gap:2px 20px;">${
 // docs/<rel> 相对 prompts/<rel> 的导入路径
 // 例：docs/05-git/x.md        -> ../../prompts/05-git/x.md
 //     docs/01-code/java/x.md  -> ../../../prompts/01-code/java/x.md
-function sourceImportPath(relPath) {
+export function sourceImportPath(relPath) {
   const dirDepth = dirname(relPath).split('/').filter(Boolean).length
   return `${'../'.repeat(dirDepth + 1)}prompts/${relPath}`
 }
 
-function processFile(file, content) {
-  const rel = file.relPath
-  console.log(`生成: ${rel}`)
-
-  // 模板页原样搬运，不注入
-  if (isTemplate(rel)) {
-    const dest = join(docsDir, rel)
-    mkdirSync(dirname(dest), { recursive: true })
-    writeFileSync(dest, content, 'utf-8')
-    console.log('  ✅ 已复制（模板页不注入）')
-    return true
-  }
+// 由单个源文件构建页面内容（纯函数，不落盘）。
+// 模板页原样返回；其余页面注入切换按钮、元信息卡片与源码导入。
+export function buildPageContent(rel, content) {
+  if (isTemplate(rel)) return content
 
   const source = splitFrontmatter(content)
   const yaml = source.yaml
@@ -134,7 +129,7 @@ function processFile(file, content) {
   const frontmatterBlock = yaml ? `---\n${yaml}\n---\n\n` : ''
   const importPath = sourceImportPath(rel)
 
-  const newContent = `${frontmatterBlock}<script setup>
+  return `${frontmatterBlock}<script setup>
 import { ref } from 'vue'
 import source from '${importPath}?raw'
 
@@ -164,18 +159,13 @@ html.dark .source-code-container {
 }
 </style>
 `
-
-  const dest = join(docsDir, rel)
-  mkdirSync(dirname(dest), { recursive: true })
-  writeFileSync(dest, newContent, 'utf-8')
-  console.log(`  ✅ 已生成 (正文长度: ${renderedBody.length})`)
-  return true
 }
 
-function main() {
-  console.log('📂 扫描 prompts 目录...')
+// 完整跑一遍生成：读 prompts/，重建 docs/ 下对应目录。返回处理数量。
+export function generate({ promptsDir = DEFAULT_PROMPTS_DIR, docsDir = DEFAULT_DOCS_DIR, log = () => {} } = {}) {
+  log('📂 扫描 prompts 目录...')
   const files = getAllMdFiles(promptsDir)
-  console.log(`📄 找到 ${files.length} 个源文件`)
+  log(`📄 找到 ${files.length} 个源文件`)
 
   // 生成物完全由 prompts/ 派生：先清掉本次要重建的顶层目录，避免残留过期页面
   const topDirs = readdirSync(promptsDir).filter((item) =>
@@ -188,10 +178,34 @@ function main() {
   let processedCount = 0
   for (const file of files) {
     const content = readFileSync(file.fullPath, 'utf-8')
-    if (processFile(file, content)) processedCount++
+    log(`生成: ${file.relPath}`)
+    const page = buildPageContent(file.relPath, content)
+    const dest = join(docsDir, file.relPath)
+    mkdirSync(dirname(dest), { recursive: true })
+    writeFileSync(dest, page, 'utf-8')
+    processedCount++
+    if (isTemplate(file.relPath)) {
+      log('  ✅ 已复制（模板页不注入）')
+    } else {
+      const { body } = splitFrontmatter(content)
+      log(`  ✅ 已生成 (正文长度: ${body.trim().length})`)
+    }
   }
 
-  console.log(`\n✅ 完成！共生成 ${processedCount} 个页面`)
+  log(`\n✅ 完成！共生成 ${processedCount} 个页面`)
+  return processedCount
 }
 
-main()
+function main() {
+  generate({
+    promptsDir: DEFAULT_PROMPTS_DIR,
+    docsDir: DEFAULT_DOCS_DIR,
+    log: (msg) => console.log(msg),
+  })
+}
+
+// 仅在作为 CLI 直接执行时落盘；被测试 import 时不产生副作用
+const isCli = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+if (isCli) {
+  main()
+}
