@@ -9,6 +9,7 @@
     "docs:build": "npm run gen-pages && vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "test": "node --test",
+    "new": "node scripts/new-prompt.js",
     "lint:prompts": "node scripts/lint-prompts.js"
   },
   "repository": {
